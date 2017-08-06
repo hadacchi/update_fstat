@@ -23,6 +23,7 @@ def update_filetimestamp(fname):
     return
 
 def get_file_timestamp(fname):
+    # ctimeはWindowsでは作成日時．linuxでは最終修正日時なので注意
     createdate = os.stat(fname).st_ctime
     cdt = datetime.datetime(*time.localtime(createdate)[:6])
     return cdt
@@ -49,7 +50,12 @@ def get_exif_timestamp(fname):
 
 def main(fnames):
     for f in fnames:
-        print(get_file_timestamp(f),get_exif_timestamp(f))
+        fstat_dt = get_file_timestamp(f)
+        exif_dt  = get_exif_timestamp(f)
+        if exif_dt is None:
+            continue
+        if fstat_dt > exif_dt:
+            os.utime(f,(exif_dt.timestamp(),exif_dt.timestamp()))
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__, version=__version__)
